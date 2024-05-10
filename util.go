@@ -10,6 +10,8 @@ import (
 	"github.com/cqroot/prompt"
 )
 
+const ProjectSaveDir = "unreal-build-cli"
+
 func CheckErr(err error) {
 	if err != nil {
 		if errors.Is(err, prompt.ErrUserQuit) {
@@ -56,4 +58,14 @@ func FindUproject() string {
 	}
 
 	return ""
+}
+
+func GetSaveDirectory() (string, error) {
+
+	cacheDir, err := os.UserCacheDir()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(cacheDir, ProjectSaveDir), err
 }

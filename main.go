@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -12,16 +13,7 @@ import (
 	"github.com/cqroot/prompt/multichoose"
 )
 
-func main() {
-
-	config := GetConfig()
-	uprojectPath := FindUproject()
-
-	if uprojectPath == "" {
-		log.Fatal("No .uproject found, make sure you are in the project directory")
-	} else {
-		log.Printf("Found project file: %s", uprojectPath)
-	}
+func PromptForBuildSettings(config Config) BuildSettings {
 
 	clientPlatforms, err := prompt.New().Ask("Select client platforms to build:").
 		MultiChoose(config.ClientOptions.Options, multichoose.WithDefaultIndexes(0, config.ClientOptions.Defaults))
@@ -55,47 +47,126 @@ func main() {
 		shouldIterate = iterate == yes
 	}
 
+	return BuildSettings{
+		ClientPlatforms: clientPlatforms,
+		ServerPlatforms: serverPlatforms,
+		Configurations:  configurations,
+		Steps:           steps,
+		ShouldIterate:   shouldIterate,
+	}
+}
+
+func PromptForPresets() (string, error) {
+
+	presets, err := GetPresetList()
+	if err != nil {
+		return "", err
+	}
+
+	presetChoice, err := prompt.New().Ask("Select a preset to build:").
+		Choose(presets)
+	CheckErr(err)
+
+	return presetChoice, nil
+}
+
+func buildArgumentList(uprojectPath string, config Config, buildSettings BuildSettings) []string {
+
 	// RunUAT.bat BuildCookRun -project="..."
 	args := []string{"BuildCookRun"}
 
 	// -project
 	args = append(args, fmt.Sprintf("-project=\"%s\"", uprojectPath))
 
-	// -targetplatform
-	args = append(args, fmt.Sprintf("-targetplatform=%s", strings.Join(clientPlatforms, "+")))
-
-	// -serverplatform
-	if len(serverPlatforms) > 0 {
-		args = append(args, "-server")
-		args = append(args, fmt.Sprintf("-serverplatform=%s", strings.Join(serverPlatforms, "+")))
+	if len(buildSettings.ClientPlatforms) > 0 {
+		// -targetplatform
+		args = append(args, fmt.Sprintf("-targetplatform=%s", strings.Join(buildSettings.ClientPlatforms, "+")))
+		// -configuration
+		args = append(args, fmt.Sprintf("-targetconfig=%s", strings.Join(buildSettings.Configurations, "+")))
 	}
 
-	// -configuration
-	args = append(args, fmt.Sprintf("-configuration=%s", strings.Join(configurations, "+")))
+	// -serverplatform
+	if len(buildSettings.ServerPlatforms) > 0 {
+		args = append(args, "-server")
+		// -serverplatform
+		args = append(args, fmt.Sprintf("-serverplatform=%s", strings.Join(buildSettings.ServerPlatforms, "+")))
+		// -configuration
+		args = append(args, fmt.Sprintf("-serverconfig=%s", strings.Join(buildSettings.Configurations, "+")))
+	}
 
 	// -cook -skipcook etc.
 	for _, stepOption := range config.StepOptions.Options {
 		stepArg := strings.ToLower(stepOption)
-		if !Contains(steps, stepOption) {
+		if !Contains(buildSettings.Steps, stepOption) {
 			stepArg = fmt.Sprintf("skip%s", stepArg)
 		}
 		args = append(args, fmt.Sprintf("-%s", stepArg))
 	}
 
 	// -iterate
-	if shouldIterate {
+	if buildSettings.ShouldIterate {
 		args = append(args, "-iterate")
 	}
 
-	fmt.Println(args)
+	return args
+}
+
+func main() {
+	config := GetConfig()
+	uprojectPath := FindUproject()
+
+	shouldReplayPtr := flag.Bool("r", false, "replay the last build settings")
+	usePresetPtr := flag.Bool("p", false, "present a list of presets")
+
+	flag.Parse()
+
+	if uprojectPath == "" {
+		log.Fatal("No .uproject found, make sure you are in the project directory")
+	} else {
+		log.Printf("Found project file: %s", uprojectPath)
+	}
+
+	var buildSettings *BuildSettings = nil
+
+	if *shouldReplayPtr {
+		loadedBuildSettings, err := LoadBuildSettings("last")
+		if err != nil {
+			buildSettings = &loadedBuildSettings
+		}
+	}
+
+	if *usePresetPtr {
+		preset, err := PromptForPresets()
+		if err != nil {
+			log.Printf("Failed to prompt for presets")
+		}
+
+		if preset != "" {
+			loadedBuildSettings, err := LoadBuildSettings(preset)
+			if err != nil {
+				buildSettings = &loadedBuildSettings
+			}
+		}
+	}
+
+	if buildSettings == nil {
+		promptedBuildSettings := PromptForBuildSettings(config)
+		buildSettings = &promptedBuildSettings
+	}
+
+	args := buildArgumentList(uprojectPath, config, *buildSettings)
+
+	log.Printf("Invoking RunUAT with arguments: %s", args)
+
+	SaveBuildSettings(*buildSettings)
 
 	cmd := exec.Command(config.RunUATPath, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
-		fmt.Println("could not run command: ", err)
+		log.Println("could not run command: ", err)
 	}
 }
 
