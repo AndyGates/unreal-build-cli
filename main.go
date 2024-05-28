@@ -82,7 +82,7 @@ func buildArgumentList(uprojectPath string, config Config, buildSettings BuildSe
 		// -targetplatform
 		args = append(args, fmt.Sprintf("-targetplatform=%s", strings.Join(buildSettings.ClientPlatforms, "+")))
 		// -configuration
-		args = append(args, fmt.Sprintf("-targetconfig=%s", strings.Join(buildSettings.Configurations, "+")))
+		args = append(args, fmt.Sprintf("-clientconfig=%s", strings.Join(buildSettings.Configurations, "+")))
 	}
 
 	// -serverplatform
