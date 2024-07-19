@@ -73,7 +73,7 @@ func SaveBuildSettings(settings BuildSettings) {
 	}
 
 	if !CheckFileExists(savePath) {
-		os.MkdirAll(savePath, 0700) // Create your file
+		err := os.MkdirAll(savePath, 0700) // Create your file
 
 		if err != nil {
 			log.Printf("Save path did not exist and we could not create it: %s", err)
