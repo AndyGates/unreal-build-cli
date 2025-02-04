@@ -13,7 +13,6 @@ type OptionSet struct {
 }
 
 type Config struct {
-	RunUATPath           string
 	ClientOptions        OptionSet
 	ServerOptions        OptionSet
 	ConfigurationOptions OptionSet
@@ -40,7 +39,6 @@ func GetConfig() Config {
 
 func CreateDefaultConfig() Config {
 	return Config{
-		RunUATPath: "..\\UnrealEngine\\Engine\\Build\\BatchFiles\\RunUAT.bat",
 		ClientOptions: OptionSet{
 			Options:  []string{"Win64", "PS5", "XSX"},
 			Defaults: []int{0},

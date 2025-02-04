@@ -122,9 +122,15 @@ func main() {
 
 	if uprojectPath == "" {
 		log.Fatal("No .uproject found, make sure you are in the project directory")
-	} else {
-		log.Printf("Found project file: %s", uprojectPath)
 	}
+
+	log.Printf("Found project file: %s", uprojectPath)
+
+	uatPath, err := GetRunUATPath(uprojectPath)
+	if err != nil {
+		log.Fatalf("could not determine RunUAT path: %s", err)
+	}
+	log.Printf("RunUAT Path: %s", uatPath)
 
 	var buildSettings *BuildSettings = nil
 
@@ -160,11 +166,11 @@ func main() {
 
 	SaveBuildSettings(*buildSettings)
 
-	cmd := exec.Command(config.RunUATPath, args...)
+	cmd := exec.Command(uatPath, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
 		log.Println("could not run command: ", err)
 	}
