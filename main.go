@@ -137,6 +137,8 @@ func main() {
 	if *shouldReplayPtr {
 		loadedBuildSettings, err := LoadBuildSettings("last")
 		if err != nil {
+			log.Printf("could not load last build settings %s", err)
+		} else {
 			buildSettings = &loadedBuildSettings
 		}
 	}
@@ -150,6 +152,8 @@ func main() {
 		if preset != "" {
 			loadedBuildSettings, err := LoadBuildSettings(preset)
 			if err != nil {
+				log.Fatalf("Failed to load preset: %s", err)
+			} else {
 				buildSettings = &loadedBuildSettings
 			}
 		}
