@@ -1,4 +1,4 @@
-module unreal-build-cli
+module github.com/AndyGates/unreal-build-cli
 
 go 1.22.2
 
