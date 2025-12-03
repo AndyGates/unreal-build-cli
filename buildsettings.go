@@ -11,11 +11,12 @@ import (
 )
 
 type BuildSettings struct {
-	ClientPlatforms []string
-	ServerPlatforms []string
-	Configurations  []string
-	Steps           []string
-	CookType        CookType
+	ClientPlatforms    []string
+	ServerPlatforms    []string
+	Configurations     []string
+	Steps              []string
+	CookType           CookType
+	AdditionalCookArgs []string
 }
 
 func GetPresetPath(presetName string) (string, error) {

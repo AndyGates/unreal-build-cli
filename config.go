@@ -18,11 +18,12 @@ type OptionSingle struct {
 }
 
 type Config struct {
-	ClientOptions        OptionSet
-	ServerOptions        OptionSet
-	ConfigurationOptions OptionSet
-	StepOptions          OptionSet
-	CookOptions          OptionSingle
+	ClientOptions         OptionSet
+	ServerOptions         OptionSet
+	ConfigurationOptions  OptionSet
+	StepOptions           OptionSet
+	CookOptions           OptionSingle
+	AdditionalCookOptions OptionSet
 }
 
 func GetConfig() Config {

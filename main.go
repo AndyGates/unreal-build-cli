@@ -32,6 +32,7 @@ func PromptForBuildSettings(config Config) BuildSettings {
 	CheckErr(err)
 
 	cookType := CookFull
+	additionalCookArgs := []string{}
 
 	if Contains(steps, config.StepOptions.Options[1]) {
 		cookChoice, err := prompt.New().Ask("Select cook type:").
@@ -41,14 +42,21 @@ func PromptForBuildSettings(config Config) BuildSettings {
 		CheckErr(err)
 
 		cookType, _ = ParseCookType(cookChoice)
+
+		if len(config.AdditionalCookOptions.Options) > 0 {
+			additionalCookArgs, err = prompt.New().Ask("Select additional cooker options:").
+				MultiChoose(config.AdditionalCookOptions.Options, multichoose.WithDefaultIndexes(0, config.AdditionalCookOptions.Defaults))
+			CheckErr(err)
+		}
 	}
 
 	return BuildSettings{
-		ClientPlatforms: clientPlatforms,
-		ServerPlatforms: serverPlatforms,
-		Configurations:  configurations,
-		Steps:           steps,
-		CookType:        cookType,
+		ClientPlatforms:    clientPlatforms,
+		ServerPlatforms:    serverPlatforms,
+		Configurations:     configurations,
+		Steps:              steps,
+		CookType:           cookType,
+		AdditionalCookArgs: additionalCookArgs,
 	}
 }
 
@@ -97,6 +105,13 @@ func buildArgumentList(uprojectPath string, config Config, buildSettings BuildSe
 			stepArg = fmt.Sprintf("skip%s", stepArg)
 		}
 		args = append(args, fmt.Sprintf("-%s", stepArg))
+	}
+
+	// allow injecting additional cooker args from the config
+	if len(buildSettings.AdditionalCookArgs) > 0 {
+		additionalArgs := strings.Join(buildSettings.AdditionalCookArgs, ",")
+		additionalArgString := fmt.Sprintf("-AdditionalCookerOptions=\"%s\"", additionalArgs)
+		args = append(args, additionalArgString)
 	}
 
 	switch buildSettings.CookType {
