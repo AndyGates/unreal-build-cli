@@ -12,11 +12,17 @@ type OptionSet struct {
 	Defaults []int
 }
 
+type OptionSingle struct {
+	Options []string
+	Default int
+}
+
 type Config struct {
 	ClientOptions        OptionSet
 	ServerOptions        OptionSet
 	ConfigurationOptions OptionSet
 	StepOptions          OptionSet
+	CookOptions          OptionSingle
 }
 
 func GetConfig() Config {
@@ -54,6 +60,10 @@ func CreateDefaultConfig() Config {
 		StepOptions: OptionSet{
 			Options:  []string{"Build", "Cook", "Pak", "Stage"},
 			Defaults: []int{0, 3},
+		},
+		CookOptions: OptionSingle{
+			Options: GetCookTypeStrings(),
+			Default: 0,
 		},
 	}
 }

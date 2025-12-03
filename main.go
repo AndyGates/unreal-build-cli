@@ -31,20 +31,16 @@ func PromptForBuildSettings(config Config) BuildSettings {
 		MultiChoose(config.StepOptions.Options, multichoose.WithDefaultIndexes(0, config.StepOptions.Defaults))
 	CheckErr(err)
 
-	shouldIterate := false
+	cookType := CookFull
 
 	if Contains(steps, config.StepOptions.Options[1]) {
-
-		const yes = "yes"
-		const no = "no"
-
-		iterate, err := prompt.New().Ask("Run an iterative cook?").
-			Choose([]string{yes, no},
+		cookChoice, err := prompt.New().Ask("Select cook type:").
+			Choose(config.CookOptions.Options,
 				choose.WithTheme(choose.ThemeLine),
 				choose.WithKeyMap(choose.HorizontalKeyMap))
 		CheckErr(err)
 
-		shouldIterate = iterate == yes
+		cookType, _ = ParseCookType(cookChoice)
 	}
 
 	return BuildSettings{
@@ -52,7 +48,7 @@ func PromptForBuildSettings(config Config) BuildSettings {
 		ServerPlatforms: serverPlatforms,
 		Configurations:  configurations,
 		Steps:           steps,
-		ShouldIterate:   shouldIterate,
+		CookType:        cookType,
 	}
 }
 
@@ -103,8 +99,11 @@ func buildArgumentList(uprojectPath string, config Config, buildSettings BuildSe
 		args = append(args, fmt.Sprintf("-%s", stepArg))
 	}
 
-	// -iterate
-	if buildSettings.ShouldIterate {
+	switch buildSettings.CookType {
+	case CookIncremental:
+		args = append(args, "-cookincremental")
+	case CookIterative:
+		args = append(args, "-legacyiterate")
 		args = append(args, "-iterate")
 	}
 

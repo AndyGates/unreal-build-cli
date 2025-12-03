@@ -15,7 +15,7 @@ type BuildSettings struct {
 	ServerPlatforms []string
 	Configurations  []string
 	Steps           []string
-	ShouldIterate   bool
+	CookType        CookType
 }
 
 func GetPresetPath(presetName string) (string, error) {
