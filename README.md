@@ -1,5 +1,11 @@
 Utility to build arguments to run `BuildCookRun` for unreal projects
 
+# Args
+
+`-r` - Re-run last build
+
+`-p` - Select from list of presets
+
 # Installation
 
 Binaries are available at https://github.com/AndyGates/unreal-build-cli/releases
@@ -54,5 +60,19 @@ Here is an example of overriding some of the defaults, and adding an additional 
    "AdditionalCookOptions": {
       "Options": ["-MyAdditionalCookArg"]
    } 
+}
+```
+# Presets
+Presets can be defined in json files placed in `%AppData%\Local\unreal-build-cli\`. Each file will be read as a separate preset.
+
+Example preset:
+`Dev_Client_Server.json`
+``` json
+{
+    "ClientPlatforms": ["Win64"],
+    "ServerPlatforms": ["Win64"],
+    "Configurations": ["Development"],
+    "Steps": ["Build", "Cook", "Pak", "Stage"],
+    "CookType": "Full"
 }
 ```
